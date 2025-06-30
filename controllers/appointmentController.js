@@ -121,6 +121,7 @@ exports.cancelAppointment = async (req, res) => {
       link: appointment.calendarEventLink
     });
   } catch (err) {
+    console.error('Cancellation Error:', err.message, err.stack);
     res.status(500).json({ status: 'error', message: 'Cancellation failed' });
   }
 };
