@@ -1,23 +1,23 @@
+const fs = require('fs');
 const { google } = require('googleapis');
-require('dotenv').config();
+const path = require('path');
 
-const {
-  GOOGLE_CLIENT_ID,
-  GOOGLE_CLIENT_SECRET,
-  GOOGLE_REFRESH_TOKEN,
-  GOOGLE_CALENDAR_ID
-} = process.env;
+// Load credentials from token.json
+const TOKEN_PATH = path.join(__dirname, '../token.json');
+const credentials = JSON.parse(fs.readFileSync(TOKEN_PATH));
 
+// Create oAuth2 client
 const oAuth2Client = new google.auth.OAuth2(
-  GOOGLE_CLIENT_ID,
-  GOOGLE_CLIENT_SECRET
+  process.env.CLIENT_ID,
+  process.env.CLIENT_SECRET,
+  'http://localhost:3000/oauth2callback'
 );
 
-oAuth2Client.setCredentials({ refresh_token: GOOGLE_REFRESH_TOKEN });
+oAuth2Client.setCredentials(credentials);
 
 const calendar = google.calendar({ version: 'v3', auth: oAuth2Client });
 
-async function createCalendarEvent(summary, description, startTime, endTime) {
+async function createCalendarEvent({ summary, description, startTime, endTime }) {
   const event = {
     summary,
     description,
@@ -32,11 +32,13 @@ async function createCalendarEvent(summary, description, startTime, endTime) {
   };
 
   const response = await calendar.events.insert({
-    calendarId: GOOGLE_CALENDAR_ID,
-    resource: event,
+    calendarId: 'primary',
+    requestBody: event,
   });
 
-  return response.data.htmlLink;
+  return response.data;
 }
 
-module.exports = createCalendarEvent;
+module.exports = {
+  createCalendarEvent,
+};
