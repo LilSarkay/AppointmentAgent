@@ -1,9 +1,18 @@
 {
+  "name": "appointment-agent",
+  "version": "1.0.0",
+  "description": "Handles appointment scheduling, rescheduling, cancellation, and availability checking via API",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "keywords": [],
+  "author": "Phoenix",
+  "license": "MIT",
   "dependencies": {
-    "axios": "^1.10.0",
     "dotenv": "^17.0.0",
-    "express": "^5.1.0",
-    "googleapis": "^150.0.1",
-    "mongoose": "^8.16.1"
+    "express": "^4.18.2",
+    "mongoose": "^7.5.0"
   }
 }
+
