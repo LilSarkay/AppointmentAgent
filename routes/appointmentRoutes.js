@@ -1,10 +1,10 @@
 const express = require('express');
 const router = express.Router();
-const controller = require('../controllers/appointmentController');
+const appointmentController = require('../controllers/appointmentController');
 
-router.post('/check-availability', controller.CheckAvailability);
-router.post('/book', controller.BookSlot);
-router.put('/reschedule', controller.RescheduleSlot);
-router.delete('/cancel', controller.CancelSlot);
+router.post('/book', appointmentController.bookAppointment);
+router.post('/available', appointmentController.checkAvailability);
+router.post('/reschedule', appointmentController.rescheduleAppointment);
+router.post('/cancel', appointmentController.cancelAppointment);
 
 module.exports = router;
