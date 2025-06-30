@@ -1,66 +1,54 @@
-const { google } = require('googleapis');
 const fs = require('fs');
-const path = require('path');
+const { google } = require('googleapis');
 const Appointment = require('../models/Appointment');
 
-// Load client secrets from environment variables
+const CREDENTIALS = JSON.parse(fs.readFileSync('credentials.json'));
+const TOKEN_PATH = 'token.json';
+
 const oAuth2Client = new google.auth.OAuth2(
-  process.env.CLIENT_ID,
-  process.env.CLIENT_SECRET,
-  process.env.REDIRECT_URI
+  CREDENTIALS.installed.client_id,
+  CREDENTIALS.installed.client_secret,
+  CREDENTIALS.installed.redirect_uris[0]
 );
 
-// Load token from token.json
-const tokenPath = path.join(__dirname, '../token.json');
-const token = JSON.parse(fs.readFileSync(tokenPath, 'utf8'));
-oAuth2Client.setCredentials(token);
+if (fs.existsSync(TOKEN_PATH)) {
+  const token = JSON.parse(fs.readFileSync(TOKEN_PATH));
+  oAuth2Client.setCredentials(token);
+} else {
+  console.error('❌ token.json missing. Please generate one using get-token.js');
+  process.exit(1);
+}
 
 const calendar = google.calendar({ version: 'v3', auth: oAuth2Client });
 
-// Book Appointment
 exports.bookAppointment = async (req, res) => {
   try {
-    const { name, email, service, date, time } = req.body;
-
-    const appointment = new Appointment({
-      name,
-      email,
-      service,
-      date,
-      time,
-    });
-
+    const { name, email, dateTime } = req.body;
+    const appointment = new Appointment({ name, email, dateTime });
     await appointment.save();
 
     const event = {
       summary: `Appointment with ${name}`,
-      description: `Service: ${service}`,
+      description: `Scheduled via AppointmentAgent`,
       start: {
-        dateTime: new Date(`${date}T${time}`),
+        dateTime: new Date(dateTime).toISOString(),
         timeZone: 'Asia/Kolkata',
       },
       end: {
-        dateTime: new Date(new Date(`${date}T${time}`).getTime() + 30 * 60000),
+        dateTime: new Date(new Date(dateTime).getTime() + 30 * 60000).toISOString(),
         timeZone: 'Asia/Kolkata',
       },
       attendees: [{ email }],
     };
 
-    const response = await calendar.events.insert({
+    await calendar.events.insert({
       calendarId: 'primary',
       resource: event,
     });
 
-    res.status(201).json({
-      status: 'success',
-      message: 'Booking confirmed!',
-      calendarLink: response.data.htmlLink,
-    });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({
-      status: 'error',
-      message: 'Booking failed',
-    });
+    res.status(200).json({ status: 'success', message: 'Appointment booked and event created' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ status: 'error', message: 'Booking failed' });
   }
 };
