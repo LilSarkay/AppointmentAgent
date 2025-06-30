@@ -1,45 +1,48 @@
-const axios = require('axios');
-const { createGoogleEvent } = require('../utils/googleCalendar');
+const Appointment = require('../models/Appointment');
+const createCalendarEvent = require('../utils/googleCalendar');
 
-const BASE_URL = 'https://inventorymanagement.fly.dev';
+// Book an appointment
+const bookAppointment = async (req, res) => {
+  try {
+    const { user_info, selected_slot, service } = req.body;
 
-exports.CheckAvailability = async (req, res) => {
-  const { service, date_range } = req.body;
-  const response = await axios.post(`${BASE_URL}/check`, { service, date_range });
-  res.json(response.data);
+    if (!user_info || !selected_slot || !service) {
+      return res.status(400).json({ message: 'Missing required fields' });
+    }
+
+    // Save appointment to DB
+    const appointment = new Appointment({
+      user_info,
+      selected_slot,
+      service
+    });
+
+    await appointment.save();
+
+    // Create Google Calendar event
+    const endTime = new Date(new Date(selected_slot).getTime() + 30 * 60000); // +30 mins
+    const calendarLink = await createCalendarEvent(
+      `Appointment for ${user_info.name}`,
+      `Service: ${service}`,
+      selected_slot,
+      endTime
+    );
+
+    res.status(200).json({
+      status: 'success',
+      message: 'Appointment booked successfully',
+      appointment,
+      calendar_link: calendarLink
+    });
+  } catch (err) {
+    console.error('Booking error:', err);
+    res.status(500).json({ message: 'Server error while booking appointment' });
+  }
 };
 
-exports.BookSlot = async (req, res) => {
-  const { user_info, selected_slot } = req.body;
-  const booking = await axios.post(`${BASE_URL}/book`, { user_info, selected_slot });
+// Add other controllers if needed (CheckAvailability, Cancel, Reschedule)
 
-  const eventLink = await createGoogleEvent(
-    `${user_info.name} Appointment`,
-    selected_slot.start,
-    selected_slot.end,
-    user_info.email
-  );
-
-  res.json({
-    status: 'success',
-    booking_id: booking.data.id,
-    google_event: eventLink,
-  });
-};
-
-exports.RescheduleSlot = async (req, res) => {
-  const { booking_id, new_slot } = req.body;
-  const response = await axios.put(`${BASE_URL}/reschedule/${booking_id}`, { new_slot });
-  res.json(response.data);
-};
-
-exports.CancelSlot = async (req, res) => {
-  const { booking_id } = req.body;
-  const response = await axios.delete(`${BASE_URL}/cancel/${booking_id}`);
-
-  res.json({
-    status: 'success',
-    message: 'Booking cancelled',
-    google_event: 'Event was deleted or should be deleted manually if stored',
-  });
+module.exports = {
+  bookAppointment,
+  // Add others here as you implement them
 };
