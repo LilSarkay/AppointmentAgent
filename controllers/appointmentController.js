@@ -3,8 +3,8 @@ const fs = require('fs');
 const Appointment = require('../models/Appointment');
 
 const TOKEN_PATH = 'token.json';
-
 const token = JSON.parse(fs.readFileSync(TOKEN_PATH));
+
 const oAuth2Client = new google.auth.OAuth2(
   process.env.CLIENT_ID,
   process.env.CLIENT_SECRET,
@@ -25,34 +25,29 @@ exports.bookAppointment = async (req, res) => {
     await appointment.save();
 
     const eventStartTime = new Date(`${date}T${time}`);
-    const eventEndTime = new Date(eventStartTime.getTime() + 30 * 60000); // 30 mins
+    const eventEndTime = new Date(eventStartTime.getTime() + 30 * 60000);
 
     const event = {
-      summary: `Appointment with ${name}`,
-      description: description,
+      summary: `Appointment with ${name || 'Team'}`,
+      description,
       start: { dateTime: eventStartTime.toISOString() },
       end: { dateTime: eventEndTime.toISOString() },
-      attendees: email ? [{ email }] : [],
     };
 
-    const calendarResponse = await calendar.events.insert({
+    const response = await calendar.events.insert({
       calendarId: 'primary',
       resource: event,
     });
 
-    const htmlLink = calendarResponse.data.htmlLink;
-
-    res.status(200).json({
+    return res.status(200).json({
       status: 'success',
-      message: 'Appointment booked and added to calendar',
-      link: htmlLink
+      googleCalendarLink: response.data.htmlLink,
     });
-
   } catch (error) {
     console.error('Booking failed:', error.message);
-    res.status(500).json({
+    return res.status(500).json({
       status: 'error',
-      message: 'Booking failed'
+      message: 'Booking failed',
     });
   }
 };

@@ -6,3 +6,4 @@ router.post('/', bookAppointment);
 
 module.exports = router;
 
+
