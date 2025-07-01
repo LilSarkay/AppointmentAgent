@@ -12,42 +12,47 @@ const oAuth2Client = new google.auth.OAuth2(
 );
 oAuth2Client.setCredentials(token);
 
-const calendar = google.calendar({
-  version: 'v3',
-  auth: oAuth2Client
-});
+const calendar = google.calendar({ version: 'v3', auth: oAuth2Client });
 
 exports.bookAppointment = async (req, res) => {
   try {
     const { name, email, date, time, description } = req.body;
 
-    const appointment = new Appointment({ name, email, date, time, description });
-    await appointment.save();
+    // Validation
+    if (!date || !time) {
+      return res.status(400).json({ status: 'error', message: 'Missing date or time' });
+    }
 
-    const eventStartTime = new Date(`${date}T${time}`);
+    const dateString = `${date}T${time}`;
+    const eventStartTime = new Date(dateString);
+
+    if (isNaN(eventStartTime.getTime())) {
+      return res.status(400).json({ status: 'error', message: 'Invalid date/time format' });
+    }
+
     const eventEndTime = new Date(eventStartTime.getTime() + 30 * 60000);
 
     const event = {
-      summary: `Appointment with ${name || 'Team'}`,
+      summary: `Appointment with ${name}`,
       description,
       start: { dateTime: eventStartTime.toISOString() },
       end: { dateTime: eventEndTime.toISOString() },
     };
 
-    const response = await calendar.events.insert({
+    await calendar.events.insert({
       calendarId: 'primary',
       resource: event,
     });
 
-    return res.status(200).json({
+    const appointment = new Appointment({ name, email, date, time, description });
+    await appointment.save();
+
+    res.status(200).json({
       status: 'success',
-      googleCalendarLink: response.data.htmlLink,
+      message: 'Appointment booked and added to calendar',
     });
   } catch (error) {
     console.error('Booking failed:', error.message);
-    return res.status(500).json({
-      status: 'error',
-      message: 'Booking failed',
-    });
+    res.status(500).json({ status: 'error', message: 'Booking failed' });
   }
 };
