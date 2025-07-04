@@ -1,0 +1,38 @@
+{
+  "name": "appointment-scheduler",
+  "version": "1.0.0",
+  "description": "AI-powered appointment scheduling system with Google Calendar integration",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js",
+    "setup-auth": "node get-token.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "appointment",
+    "scheduler",
+    "google-calendar",
+    "nodejs",
+    "express",
+    "mongodb"
+  ],
+  "author": "Saanvi Ravikiran",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.18.2",
+    "mongoose": "^7.0.0",
+    "dotenv": "^16.0.3",
+    "cors": "^2.8.5",
+    "googleapis": "^118.0.0",
+    "nodemailer": "^6.9.0",
+    "chrono-node": "^2.6.1",
+    "moment-timezone": "^0.5.43"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.22"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  }
+}
