@@ -7,7 +7,12 @@
     "start": "node server.js",
     "dev": "nodemon server.js"
   },
-  "keywords": ["appointment", "scheduling", "google-calendar", "nodejs"],
+  "keywords": [
+    "appointment",
+    "scheduling",
+    "google-calendar",
+    "nodejs"
+  ],
   "author": "Phoenix",
   "license": "MIT",
   "dependencies": {
@@ -23,5 +28,14 @@
   },
   "devDependencies": {
     "nodemon": "^3.0.1"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/LilSarkay/AppointmentAgent.git"
+  },
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/LilSarkay/AppointmentAgent/issues"
+  },
+  "homepage": "https://github.com/LilSarkay/AppointmentAgent#readme"
 }
